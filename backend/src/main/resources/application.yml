@@ -18,6 +18,10 @@ spring:
       test-on-borrow: true
       test-while-idle: true
       test-on-return : false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
 
 springdoc:
   swagger-ui:
