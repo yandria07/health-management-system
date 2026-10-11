@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 //创建axios实例
 const service = axios.create({
-    baseURL: '/api',//请求前缀
+    baseURL: import.meta.env.VITE_API_URL || '/api',//请求前缀
     timeout: 5000,//超时时间
 })
 //创建请求拦截器
