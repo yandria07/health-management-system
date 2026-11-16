@@ -8,7 +8,7 @@
           <el-image
             style="width: 100px; height: 100px"
             :src="iconUrl"
-            alt="智能助手"
+            alt="温脉"
           />
         </div>
       </div>

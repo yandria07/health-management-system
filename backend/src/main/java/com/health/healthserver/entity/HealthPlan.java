@@ -18,6 +18,7 @@ public class HealthPlan {
     private LocalDate endDate;
     private String remindTime;
     private String status;
+    private Integer targetDays; // 目标打卡天数（0 = 按计划结束日期判定）
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

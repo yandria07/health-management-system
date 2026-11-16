@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.health.healthserver.dto.HealthPlanQueryDTO;
+import com.health.healthserver.entity.Admin;
 import com.health.healthserver.entity.HealthPlan;
+import com.health.healthserver.mapper.AdminMapper;
 import com.health.healthserver.response.R;
+import com.health.healthserver.service.EmailService;
 import com.health.healthserver.service.HealthPlanService;
 import com.health.healthserver.utils.UserContext;
 import org.springframework.web.bind.annotation.*;
@@ -18,14 +21,21 @@ public class HealthPlanController {
     @Resource
     private HealthPlanService healthPlanService;
 
+    @Resource
+    private AdminMapper adminMapper;
+
+    @Resource
+    private EmailService emailService;
+
     @PostMapping("/list")
     public R<PageInfo<HealthPlan>> list(@RequestBody HealthPlanQueryDTO query) {
         Long userId = UserContext.getUserId();  // 👈 后端自己拿，不信前端
         if (userId == null) return R.fail("未登录");
         LambdaQueryWrapper<HealthPlan> wrapper = new LambdaQueryWrapper<>();
 
-        // 核心：只查当前用户的计划
-        wrapper.eq(query.getUser_id() != null, HealthPlan::getUserId, query.getUser_id());
+        // ✅ 核心：无条件加 user_id 条件，绝不信任前端
+        wrapper.eq(HealthPlan::getUserId, userId);
+
 
         // 模糊查询条件
         wrapper.like(query.getPlan_name() != null && !query.getPlan_name().isEmpty(),
@@ -83,5 +93,22 @@ public class HealthPlanController {
 
         healthPlanService.removeById(id);
         return R.success("删除成功");
+    }
+
+    @PostMapping("/reminder/test")
+    public R<?> testReminder() {
+        Long userId = UserContext.getUserId();
+        if (userId == null) return R.fail("未登录");
+        if (!emailService.isConfigured()) {
+            return R.fail("发件邮箱未配置：请在运行后端时设置环境变量 MAIL_USERNAME 与 MAIL_PASSWORD（QQ 邮箱 SMTP 授权码）");
+        }
+        Admin admin = adminMapper.selectById(userId);
+        String email = admin != null ? admin.getEmail() : null;
+        if (email == null || email.isBlank()) {
+            return R.fail("未设置邮箱，请先在个人中心填写你的 QQ 邮箱");
+        }
+        emailService.sendReminder(email, "【健康检查】邮件提醒功能测试",
+                "<p>这是一封测试邮件，说明你的健康提醒邮件功能已配置成功！</p>");
+        return R.data("测试邮件已发送至 " + email + "，请查收");
     }
 }

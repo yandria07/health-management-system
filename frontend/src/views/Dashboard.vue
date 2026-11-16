@@ -19,21 +19,39 @@
     <!-- 数据展示区 -->
     <div v-else v-loading="loading">
       <!-- 1. 核心指标卡片区 -->
-      <el-row :gutter="20" class="card-row">
+      <el-row :gutter="20" type="flex" class="card-row">
         <el-col :span="3" v-for="card in cardList" :key="card.label">
           <el-card shadow="hover" class="metric-card">
+            <div class="card-icon">
+              <!-- 心率：心电图脉搏线（EP 图标库无 heart 类图标，用自定义 SVG） -->
+              <svg
+                v-if="card.icon === 'heartbeat'"
+                class="ecg-svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M2 12h4l2.5-6 3.5 12 2.5-7 1.5 3H22" />
+              </svg>
+              <el-icon v-else><component :is="card.icon" /></el-icon>
+            </div>
             <div class="card-label">{{ card.label }}</div>
             <div class="card-value">
               {{ card.value }} <span class="unit">{{ card.unit }}</span>
             </div>
-            <el-tag
-              v-if="card.status"
-              :type="card.statusType"
-              size="small"
-              style="margin-top: 5px"
-            >
-              {{ card.status }}
-            </el-tag>
+            <!-- 始终保留标签占位区，保证所有卡片等高；仅状态异常时才显示标签 -->
+            <div class="card-tag-slot">
+              <el-tag
+                v-if="card.status && card.status !== '正常'"
+                :type="card.statusType"
+                size="small"
+              >
+                {{ card.status }}
+              </el-tag>
+            </div>
           </el-card>
         </el-col>
       </el-row>
@@ -155,12 +173,13 @@ const cardList = computed(() => {
   }
 
   return [
-    { label: "身高", value: d.height, unit: "cm" },
-    { label: "体重", value: d.weight, unit: "kg" },
+    { label: "身高", value: d.height, unit: "cm", icon: "TrendCharts" },
+    { label: "体重", value: d.weight, unit: "kg", icon: "DataLine" },
     {
       label: "BMI",
       value: d.bmi,
       unit: "",
+      icon: "Odometer",
       status: bmiStatus,
       statusType: bmiType,
     },
@@ -168,12 +187,13 @@ const cardList = computed(() => {
       label: "血压",
       value: `${d.systolicPressure}/${d.diastolicPressure}`,
       unit: "mmHg",
+      icon: "Aim",
       status: bpStatus,
       statusType: bpType,
     },
-    { label: "心率", value: d.heartRate, unit: "次/分" },
-    { label: "昨日步数", value: d.steps, unit: "步" },
-    { label: "昨日睡眠", value: d.sleepHours, unit: "小时" },
+    { label: "心率", value: d.heartRate, unit: "次/分", icon: "heartbeat" },
+    { label: "昨日步数", value: d.steps, unit: "步", icon: "Promotion" },
+    { label: "昨日睡眠", value: d.sleepHours, unit: "小时", icon: "Moon" },
   ];
 });
 
@@ -238,6 +258,7 @@ const renderCharts = () => {
   // 图表①：体重 & BMI 双折线图
   myChart1 = echarts.init(chart1Ref.value);
   myChart1.setOption({
+    backgroundColor: "#f8fafc",
     title: {
       text: "体重 & BMI 趋势",
       left: "center",
@@ -293,6 +314,7 @@ const renderCharts = () => {
   // 图表②：收缩压、舒张压双折线图
   myChart2 = echarts.init(chart2Ref.value);
   myChart2.setOption({
+    backgroundColor: " #e2e9f0",
     title: {
       text: "血压趋势 (mmHg)",
       left: "center",
@@ -300,7 +322,10 @@ const renderCharts = () => {
     },
     tooltip: commonTooltip,
     legend: { data: ["收缩压", "舒张压"], top: 5, left: 10 },
-    grid: commonGrid,
+    grid:{
+      ...commonGrid,
+      right:30,
+    },
     xAxis: { type: "category", data: dates },
     yAxis: { type: "value" },
     series: [
@@ -332,13 +357,17 @@ const renderCharts = () => {
   // 图表③：心率变化折线图
   myChart3 = echarts.init(chart3Ref.value);
   myChart3.setOption({
+    backgroundColor: "#f7ebf2",
     title: {
       text: "心率变化 (次/分)",
       left: "center",
       textStyle: { fontSize: 14 },
     },
     tooltip: commonTooltip,
-    grid: commonGrid,
+    grid:{
+      ...commonGrid,
+      right:50,
+    },
     xAxis: { type: "category", data: dates },
     yAxis: { type: "value", min: 40, max: 140 },
     series: [
@@ -353,12 +382,13 @@ const renderCharts = () => {
             {
               yAxis: 60,
               lineStyle: { color: "#909399", type: "dashed" },
-              label: { formatter: "正常下限" },
+              label: { formatter: "正常下限",textStyle:{fontSize:10} },
+              
             },
             {
               yAxis: 100,
               lineStyle: { color: "#F56C6C", type: "dashed" },
-              label: { formatter: "正常上限" },
+              label: { formatter: "正常上限",textStyle:{fontSize:10} },
             },
           ],
         },
@@ -369,6 +399,7 @@ const renderCharts = () => {
   // 图表④：步数 + 睡眠时长 组合柱状图
   myChart4 = echarts.init(chart4Ref.value);
   myChart4.setOption({
+  backgroundColor: "#efebf0",
     title: {
       text: "步数 & 睡眠时长",
       left: "center",
@@ -452,6 +483,52 @@ onUnmounted(() => {
 }
 .metric-card {
   text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+  height: 100%;                 /* 让同一行各卡等高 */
+}
+/* 悬浮：卡片上浮 + 放大 + 投影 */
+.metric-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 12px 28px rgba(159, 29, 29, 0.18);
+}
+/* 标签占位区：始终占同一高度，没有状态标签的卡片也保留空间，保证整排等高 */
+.card-tag-slot {
+  min-height: 26px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* 图标：圆形浅底 + 深红主色，悬浮时放大并加深 */
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbe9e9, #f5d5d5);
+  color: #9f1d1d;
+  line-height: 1;                 /* 统一基线，避免不同图标上下错位 */
+  transition: transform 0.25s ease, color 0.25s ease, background 0.25s ease;
+
+  .el-icon,
+  .ecg-svg {
+    width: 26px;
+    height: 26px;
+    font-size: 26px;              /* 让 EP 图标与 ECG 尺寸完全一致 */
+  }
+
+  .ecg-svg {
+    stroke-width: 2;              /* 对齐 Element Plus 线型图标的描边粗细 */
+  }
+}
+.metric-card:hover .card-icon {
+  transform: scale(1.22);
+  color: #7f1010;
+  background: linear-gradient(135deg, #f8d7d7, #efbdbd);
 }
 .card-label {
   font-size: 14px;
@@ -462,11 +539,25 @@ onUnmounted(() => {
   font-size: 24px;
   font-weight: bold;
   color: #303133;
+  transition: color 0.25s ease;
+}
+.metric-card:hover .card-value {
+  color: #7f1010;
 }
 .unit {
   font-size: 12px;
   font-weight: normal;
   color: #909399;
+}
+/* 统计小模块与图表卡片：统一悬浮上浮效果（不缩放，避免图表模糊） */
+.stats-row .el-card,
+.chart-row .el-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.stats-row .el-card:hover,
+.chart-row .el-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 .chart-box {
   height: 350px;

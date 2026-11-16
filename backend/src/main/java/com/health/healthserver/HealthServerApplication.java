@@ -3,9 +3,11 @@ package com.health.healthserver; // 👈 必须是这个路径，和你现在的
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication // 👈 核心注解，开启 Spring Boot 自动配置
 @MapperScan("com.health.healthserver.mapper")
+@EnableScheduling
 public class HealthServerApplication {
 
     public static void main(String[] args) {

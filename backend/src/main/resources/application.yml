@@ -3,11 +3,13 @@ server:
     context-path: /api
     port: 8080
 spring:
+  profiles:
+    active: dev
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     url: jdbc:mysql://127.0.0.1:3306/student?characterEncoding=UTF-8&&serverTimezone=GMT
     username: root
-    password: Cyybs@0402
+
     driver‑class‑name: com.mysql.cj.jdbc.Driver
     druid:
       initial-size: 5
@@ -35,3 +37,10 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+# 智谱 AI 配置
+zhipu:
+  ai:
+
+    api-url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+    model: glm-4-flash

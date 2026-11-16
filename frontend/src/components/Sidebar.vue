@@ -3,14 +3,14 @@
     <el-menu
       :collapse="isCollapsed"
       :collapse-transition="false"
-      default-active="2"
+      :default-active="activeIndex"
       class="menu-style"
     >
       <div class="brand">
         <el-image style="width: 50px; height: 50px" :src="iconUrl" alt="logo" />
         <div v-show="!isCollapsed" class="info-card">
           <h1 class="brand-title">个人健康管理平台</h1>
-          <p class="brand-subtitle">智能助手，您的智能助手</p>
+          <p class="brand-subtitle">温脉</p>
         </div>
       </div>
       <el-menu-item
@@ -28,12 +28,14 @@
 
 <script setup>
 import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAdminStore } from "@/stores/admin";
 const router = useRouter();
+const route = useRoute();
 const iconUrl = new URL("@/assets/images/机器人.png", import.meta.url).href;
 const isCollapsed = computed(() => useAdminStore().isCollapsed);
-console.log(router, "router");
+// 根据当前路由高亮对应菜单项
+const activeIndex = computed(() => route.path.replace("/back/", ""));
 const selectMenu = (path) => {
   const currentRoute = router.options.routes[0];
   router.push(`${currentRoute.path}/${path}`);
@@ -59,12 +61,12 @@ const selectMenu = (path) => {
       font-size: 20px;
       font-weight: bold;
       margin-bottom: 5px;
-      color: #303133;
+      color: #7f1010;
       margin-top: 0;
     }
     .brand-subtitle {
-      font-size: 12px;
-      color: #909399;
+      font-size: 15px;
+      color: #d94679;
       margin: 0;
     }
   }

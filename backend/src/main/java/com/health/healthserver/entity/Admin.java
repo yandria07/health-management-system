@@ -14,15 +14,22 @@ public class Admin {
     //主键ID
     @TableId(type = IdType.AUTO)
     private Long id;
+
     @Schema(description = "用户名")
     private String username;
+
     private String email;
     private String nickname;
     private String password;
     private Integer gender;
     private String phone;
+
     @TableField("userType")
     private Integer userType;
+
+    // 👇 新增：头像
+    private String avatar;
+
     @TableField(exist = false)
     private String confirmPassword;
 }
